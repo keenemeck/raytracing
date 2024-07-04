@@ -2,7 +2,7 @@
 #define camera_h
 
 #include "aabb.h"
-#include "newbvh.h"
+#include "bvh.h"
 #include "rand.h"
 #include "ray.h"
 #include "shape.h"

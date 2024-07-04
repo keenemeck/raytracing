@@ -7,7 +7,7 @@
 class hit {
 public:
   float t = 99999.0;
-  bool front = true; // TODO: implement this properly
+  bool front = true;
   vec3 normal;
   vec3 location;
   material mat;
