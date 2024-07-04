@@ -1,0 +1,144 @@
+
+#ifndef BVH_H
+#define BVH_H
+
+#include "shape.h"
+#include "vec3.h"
+#include <vector>
+
+using namespace std;
+
+struct BVHNode {
+  vec3 aabbMin, aabbMax;
+  int leftFirst, shapeCount;
+  bool isLeaf() { return shapeCount > 0; }
+};
+
+class bvh {
+public:
+  int N;
+  vector<shape *> shapes;
+  int *shapeIdx;
+  BVHNode *bvhNode;
+  int rootNodeIdx = 0, nodesUsed = 1;
+
+  bvh() {}
+  bvh(vector<shape *> &s) {
+    shapes = s;
+    N = int(shapes.size());
+    bvhNode = new BVHNode[N * 2 - 1];
+    shapeIdx = new int[N];
+    for (int i = 0; i < N; i++) {
+      shapeIdx[i] = i;
+    }
+    BVHNode &root = bvhNode[rootNodeIdx];
+    root.leftFirst = 0, root.shapeCount = N;
+    UpdateNodeBounds(rootNodeIdx);
+    // subdivide recursively
+    Subdivide(rootNodeIdx);
+  }
+
+  void UpdateNodeBounds(int nodeIdx) {
+    BVHNode &node = bvhNode[nodeIdx];
+    node.aabbMin = vec3(1e30f, 1e30f, 1e30f);
+    node.aabbMax = vec3(-1e30f, -1e30f, -1e30f);
+    for (int first = node.leftFirst, i = 0; i < node.shapeCount; i++) {
+      int leafShapeIdx = shapeIdx[first + i];
+      shape &leafShape = *shapes[first + i];
+      node.aabbMin = min(node.aabbMin, leafShape.bb.bbmin);
+      node.aabbMax = max(node.aabbMax, leafShape.bb.bbmax);
+    }
+  }
+
+  void Subdivide(int nodeIdx) {
+    BVHNode &node = bvhNode[nodeIdx];
+
+    // determine split axis using SAH
+    int bestAxis = -1;
+    float bestPos = 0, bestCost = 1e30f;
+    for (int axis = 0; axis < 3; axis++)
+      for (int i = 0; i < node.shapeCount; i++) {
+        shape &shape = *shapes[shapeIdx[node.leftFirst + i]];
+        float candidatePos = shape.centroid.v[axis];
+        float cost = EvaluateSAH(node, axis, candidatePos);
+        if (cost < bestCost)
+          bestPos = candidatePos, bestAxis = axis, bestCost = cost;
+      }
+    int axis = bestAxis;
+    float splitPos = bestPos;
+    vec3 e = node.aabbMax - node.aabbMin; // extent of parent
+    float parentArea = e.v[0] * e.v[1] + e.v[1] * e.v[2] + e.v[2] * e.v[0];
+    float parentCost = node.shapeCount * parentArea;
+    if (bestCost >= parentCost)
+      return;
+
+    int i = node.leftFirst;
+    int j = i + node.shapeCount - 1;
+    while (i <= j) {
+      if (shapes[i]->centroid.v[axis] < splitPos)
+        i++;
+      else
+        swap(shapes[i], shapes[j--]);
+    }
+
+    int leftCount = i - node.leftFirst;
+    if (leftCount == 0 || leftCount == node.shapeCount)
+      return;
+    // create child nodes
+    int leftChildIdx = nodesUsed++;
+    int rightChildIdx = nodesUsed++;
+    bvhNode[leftChildIdx].leftFirst = node.leftFirst;
+    bvhNode[leftChildIdx].shapeCount = leftCount;
+    bvhNode[rightChildIdx].leftFirst = i;
+    bvhNode[rightChildIdx].shapeCount = node.shapeCount - leftCount;
+    node.leftFirst = leftChildIdx;
+    node.shapeCount = 0;
+
+    UpdateNodeBounds(leftChildIdx);
+    UpdateNodeBounds(rightChildIdx);
+    // recurse
+    Subdivide(leftChildIdx);
+    Subdivide(rightChildIdx);
+  }
+
+  void IntersectBVH(ray &ray, const int nodeIdx, hit &h) {
+    BVHNode &node = bvhNode[nodeIdx];
+    aabb bb(node.aabbMin, node.aabbMax);
+    if (!bb.ray_intersect(ray))
+      return;
+    if (node.isLeaf()) {
+      hit tempHit;
+      for (int i = 0; i < node.shapeCount; i++) {
+        if (shapes[shapeIdx[node.leftFirst + i]]->ray_intersect(ray, tempHit)) {
+          if (tempHit.t < h.t) {
+            h = tempHit;
+          }
+        }
+      }
+    } else {
+      IntersectBVH(ray, node.leftFirst, h);
+      IntersectBVH(ray, node.leftFirst + 1, h);
+    }
+  }
+
+  float EvaluateSAH(BVHNode &node, int axis, float pos) {
+    // determine triangle counts and bounds for this split candidate
+    aabb leftBox, rightBox;
+    int leftCount = 0, rightCount = 0;
+    for (uint i = 0; i < node.shapeCount; i++) {
+      shape &shape = *shapes[shapeIdx[node.leftFirst + i]];
+      if (shape.centroid.v[axis] < pos) {
+        leftCount++;
+        leftBox.grow(shape.bb);
+      } else {
+        rightCount++;
+        rightBox.grow(shape.bb);
+      }
+    }
+    float cost = leftCount * leftBox.surface_area() +
+                 rightCount * rightBox.surface_area();
+    return cost > 0 ? cost : 1e30f;
+  }
+};
+
+#endif // bhv_h
