@@ -18,6 +18,11 @@ int main() {
   quad q7({0.4999, -0.3, -0.3}, {0.4999, 0.3, -0.3}, {0.4999, 0.3, 0.3});
   quad q8({-0.4999, 0.3, 0.3}, {-0.4999, 0.3, -0.3}, {-0.4999, -0.3, -0.3});
 
+  vec3 white = {255, 255, 255};
+  vec3 red = {255, 0, 0};
+  vec3 green = {0, 255, 0};
+  vec3 blue = {0, 0, 255};
+
   material wLight;
   wLight.emissive = true;
   wLight.color = {255 * 7, 255 * 7, 255 * 7};
@@ -93,18 +98,13 @@ int main() {
   cam.samples = 2000;
   cam.bounces = 20;
 
-  switch (1) {
-  // cornell
-  case 1:
-    cam.aspect_ratio = 1.0;
-    cam.fov = 13;
-    cam.camera_origin = {0, 0, 2};
-    cam.lookat = {0, 0, -1};
-    cam.vup = {0, 1, 0};
-    cam.scene = shapes;
-    cam.BVH = bvh(shapes);
-    break;
-  }
+  cam.aspect_ratio = 1.0;
+  cam.fov = 13;
+  cam.camera_origin = {0, 0, 2};
+  cam.lookat = {0, 0, -1};
+  cam.vup = {0, 1, 0};
+  cam.scene = shapes;
+  cam.BVH = bvh(shapes);
 
   cam.time_estimate(cam.image_height, cam.samples);
   cam.render();
