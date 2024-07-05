@@ -73,11 +73,11 @@ int main() {
 
   q3.mat.color = {255, 255, 255};
 
-  vector<shape *> shapes = {&q6, &q7, &q8};
+  vector<shape *> shapes = {&q1, &q2, &q3, &q4, &q5, &q6};
 
   float scale;
   vector<float> offsets(3);
-  string filename = "dragon.obj";
+  string filename = "bunny.obj";
 
   if (filename == "bunny.obj") {
     scale = 3.21132;
@@ -94,11 +94,11 @@ int main() {
 
   camera cam;
 
-  cam.image_height = 800;
-  cam.samples = 2000;
+  cam.image_height = 400;
+  cam.samples = 100;
   cam.bounces = 20;
-
   cam.aspect_ratio = 1.0;
+
   cam.fov = 13;
   cam.camera_origin = {0, 0, 2};
   cam.lookat = {0, 0, -1};

@@ -1,5 +1,3 @@
-<a id="readme-top"></a>
-
 <div align="center">
   <a href="https://github.com/keenemeck/raytracing">
     <img src="images/dragon800x2000.png" alt="Logo" width="200" height="200">
@@ -12,44 +10,29 @@
   </p>
 </div>
 
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ### Installation
 
 1. Clone the repo
    ```sh
    git clone https://github.com/keenemeck/raytracing.git
    ```
-2. Install NPM packages
+2. Build the project
    ```sh
-   npm install
+   make
    ```
-3. Enter your API in `config.js`
+3. Run the program
    ```js
-   const API_KEY = 'ENTER YOUR API';
+   ./main > images/image.ppm
    ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+   You can also redirect the image output elsewhere
 
 
-<!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Modifying the scene is done by either adding primitives in the main.cpp, or by loading .objs.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+By default, a cornell box with a bunny will be rendered, but any obj file may replace it. Note that scaling and offsetting may be required to make the model fit the scene. Running the output once will suggest outputs that should center the obj in the box.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+A primitive's color or material properties (reflectivity, or emissivity) can be modified in the primitive's .mat member variable.
 
-
-
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-* []()
-* []()
-* []()
+For higher fidelity renders, try raising the camera's image dimensions, or increasing the sample count per pixel. Both examples can be found in main.cpp.
